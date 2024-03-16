@@ -8,46 +8,44 @@ import pymysql
 DB_HOST = '82.97.249.199'
 DB_USER = 'gen_user'
 DB_PASSWORD = 'h2d@N:i?9tSZoW'
-DB_NAME = 'default_db'
+DB_NAME = 'graduate_work_database'
 
-MYSQL_HOST='147.45.144.66'
-MYSQL_PORT='3306'
-MYSQL_USER='gen_user'
-MYSQL_PASSWORD='{\+$!RGM1INJ)V'
-MYSQL_DBNAME='default_db'
 
+# Подключение к базе данных
 def connect_to_database():
     try:
-        # Подключение к базе данных
-        connection = pymysql.connect(host=DB_HOST,
-                                     user=DB_USER,
+        connection = pymysql.connect(host=DB_HOST, user=DB_USER,
                                      password=DB_PASSWORD,
                                      database=DB_NAME,
                                      cursorclass=pymysql.cursors.DictCursor)
         print("Соединение с базой данных успешно установлено.")
         return connection
+    
     except Exception as e:
         print("Ошибка при подключении к базе данных:", e)
+    
+    return None
 
-def insert_record(connection, data):
+def insert_data(connection, variables, data, table_name):
     try:
         # Создание объекта курсора
         with connection.cursor() as cursor:
             # SQL запрос для вставки записи
-            sql = "INSERT INTO test (id, diw, do, doi) VALUES (%s, %s, %s, %s)"
+
+            sql = f'INSERT INTO {table_name} ({', '.join(variables)}) VALUES ({', '.join(['%s' for _ in range(len(variables))])})'
             # Выполнение SQL запроса с передачей данных
-            cursor.execute(sql, (data['value1'], data['value2'], data['value3'], 1))
+            cursor.execute(sql, (data))
         # Подтверждение изменений в базе данных
         connection.commit()
         print("Запись успешно добавлена в базу данных.")
     except Exception as e:
         print("Ошибка при добавлении записи в базу данных:", e)
 
-def fetch_records(connection):
+def fetch_records(connection, table):
     try:
         with connection.cursor() as cursor:
             # SQL запрос для выборки всех записей
-            sql = "SELECT * FROM test"
+            sql = f'SELECT * FROM {table}'
             # Выполнение SQL запроса
             cursor.execute(sql)
             # Получение результатов запроса
@@ -66,9 +64,9 @@ def main():
         # Пример данных для добавления
         data_to_insert = {'value1': 1, 'value2': 1, 'value3': 1}
         # Добавление записи в базу данных
-        insert_record(connection, data_to_insert)
+        insert_data(connection, ['first_name', 'last_name', 'email', 'phone_number', 'password', 'other_personal_data', 'other_doctor_data'], ['Александр', 'Полянский', 'ak.polyanskiy@gmail.com', 79880005886, '1123', '', ''],'Users')
         # Получение и вывод всех записей из базы данных
-        fetch_records(connection)
+        fetch_records(connection, 'Users')
         # Закрытие соединения с базой данных
         connection.close()
 
