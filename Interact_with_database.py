@@ -1,14 +1,20 @@
 #!/usr/bin/env python3.12
 
 import pymysql
+import os
+import database_main_insert_varibles as dbv
 
-import pymysql
+
+os.environ['DB_HOST'] = ''
+os.environ['DB_USER'] = 'gen_user'
+os.environ['DB_PASSWORD'] = 'h2d@N:i?9tSZoW'
+os.environ['DB_NAME'] = 'graduate_work_database'
 
 # Параметры подключения к базе данных
-DB_HOST = '82.97.249.199'
-DB_USER = 'gen_user'
-DB_PASSWORD = 'h2d@N:i?9tSZoW'
-DB_NAME = 'graduate_work_database'
+DB_HOST = os.getenv('DB_HOST')
+DB_USER = os.getenv('DB_USER')
+DB_PASSWORD = os.getenv('DB_PASSWORD')
+DB_NAME = os.getenv('DB_NAME')
 
 
 # Подключение к базе данных
@@ -57,14 +63,21 @@ def fetch_records(connection, table):
     except Exception as e:
         print("Ошибка при выполнении запроса к базе данных:", e)
 
+def check_login(login):
+    pass    
+
+def check_password(login, password):
+    pass
+
+def add_image(user_id, img):
+    pass
+
 def main():
     # Установление соединения с базой данных
     connection = connect_to_database()
     if connection:
-        # Пример данных для добавления
-        data_to_insert = {'value1': 1, 'value2': 1, 'value3': 1}
         # Добавление записи в базу данных
-        insert_data(connection, ['first_name', 'last_name', 'email', 'phone_number', 'password', 'other_personal_data', 'other_doctor_data'], ['Александр', 'Полянский', 'ak.polyanskiy@gmail.com', 79880005886, '1123', '', ''],'Users')
+        insert_data(connection, dbv.Users, ['Александр', 'Полянский', 'ak.polyanskiy@gmail.com', 79880005506, '1123', '', ''],'Users')
         # Получение и вывод всех записей из базы данных
         fetch_records(connection, 'Users')
         # Закрытие соединения с базой данных

@@ -1,0 +1,1 @@
+Users = ['first_name', 'last_name', 'email', 'phone_number', 'password', 'other_personal_data', 'other_doctor_data']
