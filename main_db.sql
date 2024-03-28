@@ -1,3 +1,4 @@
+-- Пользователи
 CREATE TABLE Users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     first_name VARCHAR(255) NOT NULL,
@@ -53,12 +54,14 @@ CREATE TABLE DoctorPatient (
     FOREIGN KEY (patient_id) REFERENCES Users(id)
 );
 
+-- Уведомления для пользователей
 CREATE TABLE UserNotifications (
     notification_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES Users(id)
 );
 
+-- Текст уведомлений
 CREATE TABLE NotificationInfo (
     notification_id INT NOT NULL,
     notification_text TEXT,
@@ -67,6 +70,7 @@ CREATE TABLE NotificationInfo (
     FOREIGN KEY (notification_id) REFERENCES UserNotifications(notification_id)
 );
 
+-- Сессии для подключения
 CREATE TABLE UserSessions (
     session_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
@@ -76,23 +80,3 @@ CREATE TABLE UserSessions (
     INDEX (expiry_time),  -- Индекс для быстрого поиска устаревших сеансов
     FOREIGN KEY (user_id) REFERENCES Users(id)
 );
-
--- Доктор и его доступ к изображению (решает вопрос возможности доступа нескольких докторов к одному изображению)
--- CREATE TABLE DoctorImages (
---     doctor_id: INT NOT NULL,
---     image_id: INT NOT NULL,
---     PRIMARY KEY(image_id, doctor_id),
---     FOREIGN KEY (doctor_id) REFERENCES Users(id),
---     FOREIGN KEY (image_id) REFERENCES Images(id)
--- )
-
--- Пример получения врача 
--- select i.image_data from images i
--- join DoctorImages di on di.image_id =  i.image_id 
--- where di.doctor_id = 1
-
--- Пример доступа 
--- select r.* from user u
--- join UserRoles ur on u.id = ur.user_id
--- join Roles r on ur.role_id = r.id
--- where u.id = {id}
