@@ -1,7 +1,10 @@
 #!/usr/bin/env python3.12
-import pymysql
-import os
 import database_main_insert_varibles as dbv
+import hashlib
+import datetime
+import pymysql
+import secrets
+import os
 
 os.environ['DB_HOST'] = ''
 os.environ['DB_USER'] = 'gen_user'
@@ -194,28 +197,72 @@ def delete_role(connection, role_id):
         # Всегда закрываем соединение, чтобы избежать утечек
         connection.close()
 
+# Сессии
+# Функция для создания сеанса входа в систему
+def create_session(connection, user_id):
+    try:
+        with connection.cursor() as cursor:
+            # Генерируем случайный токен для сеанса
+            session_token = secrets.token_hex(16)
+
+            # Хешируем токен для безопасного хранения в базе данных
+            hashed_token = hashlib.sha256(session_token.encode()).hexdigest()
+
+            # Получаем текущую дату и время
+            current_time = datetime.datetime.now()
+
+            # Вставляем запись о сеансе в базу данных
+            sql_insert_session = "INSERT INTO UserSessions (user_id, session_token, expiry_time) VALUES (%s, %s, %s)"
+            cursor.execute(sql_insert_session, (user_id, hashed_token, current_time))
+            connection.commit()
+
+            return session_token
+    finally:
+        # Всегда закрываем соединение, чтобы избежать утечек
+        connection.close()
+# Функция для проверки существования и валидности сеанса
+def verify_session(connection, session_token):
+    try:
+        with connection.cursor() as cursor:
+            # Получаем текущее время
+            current_time = datetime.datetime.now()
+
+            # Получаем запись о сеансе из базы данных по токену
+            sql_select_session = "SELECT * FROM UserSessions WHERE session_token = %s AND expiry_time > %s"
+            cursor.execute(sql_select_session, (hashlib.sha256(session_token.encode()).hexdigest(), current_time))
+            session = cursor.fetchone()
+
+            if session:
+                return True, session['user_id']
+            else:
+                return False, None
+    finally:
+        # Всегда закрываем соединение, чтобы избежать утечек
+        connection.close()
+
 # Взаимодействие с пользователем    
 # Аутентификация пользователя по электронной почте или номеру телефона и паролю
 def authenticate_user(connection, email_or_phone, password):
     try:
         with connection.cursor() as cursor:
             # Поиск пользователя по электронной почте или номеру телефона и паролю
-            sql = 'SELECT * FROM Users WHERE (email = %s OR phone_number = %s) AND password = %s'
+            sql = 'SELECT Users.id, Users.first_name, Users.last_name, Users.email, UserRoles.role_id FROM Users LEFT JOIN UserRoles ON Users.id = UserRoles.user_id WHERE (Users.email = %s OR Users.phone_number = %s) AND Users.password = %s'
             cursor.execute(sql, (email_or_phone, email_or_phone, password))
             user = cursor.fetchone()
 
             if user:
-                # Возвращаем данные пользователя, если он найден
+                # Получаем роль пользователя
+                role_id = user['role_id']
+                # Возвращаем данные пользователя и его роль, если он найден
                 return {
                     'id': user['id'],
                     'first_name': user['first_name'],
                     'last_name': user['last_name'],
                     'email': user['email'],
+                    'role_id': role_id
                 }
     finally:
-        connection.close()    
-    
-    return None
+        connection.close()
 # Функция для регистрации нового пользователя
 def register_user(connection, first_name, last_name, email, phone_number, password, other_personal_data=None, other_doctor_data=None):
     try:
@@ -496,12 +543,7 @@ def main():
     # Установление соединения с базой данных
     connection = connect_to_database()
     if connection:
-        # Добавление записи в базу данных
-        insert_data(connection, dbv.Users, ['Александр', 'Полянский', 'ak.polyanskiy@gmail.com', 79880005506, '1123', '', ''],'Users')
-        # Получение и вывод всех записей из базы данных
-        fetch_records(connection, 'Users')
-        # Закрытие соединения с базой данных
+        print('соединение установленно')
         connection.close()
-
 if __name__ == '__main__':
     main()
