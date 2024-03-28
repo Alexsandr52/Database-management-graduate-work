@@ -44,8 +44,6 @@ CREATE TABLE AnalysisResults (
     FOREIGN KEY (image_id) REFERENCES Images(id)
 );
 
-
-
 -- Доктор и его пациент (решает вопрос возможности доступа нескольких докторов к одному изображению)
 CREATE TABLE DoctorPatient (
     doctor_id INT NOT NULL,
@@ -54,6 +52,21 @@ CREATE TABLE DoctorPatient (
     FOREIGN KEY (doctor_id) REFERENCES Users(id),
     FOREIGN KEY (patient_id) REFERENCES Users(id)
 );
+
+CREATE TABLE UserNotifications (
+    notification_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES Users(id)
+);
+
+CREATE TABLE NotificationInfo (
+    notification_id INT NOT NULL,
+    notification_text TEXT,
+    notification_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (notification_id),
+    FOREIGN KEY (notification_id) REFERENCES UserNotifications(notification_id)
+);
+
 
 -- Доктор и его доступ к изображению (решает вопрос возможности доступа нескольких докторов к одному изображению)
 -- CREATE TABLE DoctorImages (
