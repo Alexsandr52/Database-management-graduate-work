@@ -4,6 +4,8 @@ import hashlib
 import datetime
 import pymysql
 import secrets
+import string
+import random
 import os
 
 os.environ['DB_HOST'] = ''
