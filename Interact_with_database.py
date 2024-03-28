@@ -1,5 +1,4 @@
 #!/usr/bin/env python3.12
-import database_main_insert_varibles as dbv
 import hashlib
 import datetime
 import pymysql
