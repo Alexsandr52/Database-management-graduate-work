@@ -3,7 +3,7 @@ CREATE TABLE Users (
     first_name VARCHAR(255) NOT NULL,
     last_name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
-    phone_number INT UNSIGNED UNIQUE,
+    phone_number VARCHAR(10) UNIQUE,
     password VARCHAR(255) NOT NULL,
     other_personal_data TEXT,
     other_doctor_data TEXT
@@ -91,7 +91,7 @@ CREATE TABLE UserSessions (
 -- join DoctorImages di on di.image_id =  i.image_id 
 -- where di.doctor_id = 1
 
---Пример доступа 
+-- Пример доступа 
 -- select r.* from user u
 -- join UserRoles ur on u.id = ur.user_id
 -- join Roles r on ur.role_id = r.id

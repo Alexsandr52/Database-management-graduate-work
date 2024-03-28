@@ -196,6 +196,67 @@ def delete_role(connection, role_id):
     finally:
         # Всегда закрываем соединение, чтобы избежать утечек
         connection.close()
+# Функция для изменения роли пользователя
+def change_user_role(connection, user_id, new_role_id):
+    try:
+        with connection.cursor() as cursor:
+            # Проверяем, существует ли пользователь с таким ID
+            sql_check_user = 'SELECT * FROM Users WHERE id = %s'
+            cursor.execute(sql_check_user, (user_id,))
+            user = cursor.fetchone()
+
+            if not user:
+                return 'Пользователь с указанным ID не найден'
+
+            # Проверяем, существует ли роль с таким ID
+            sql_check_role = 'SELECT * FROM Roles WHERE id = %s'
+            cursor.execute(sql_check_role, (new_role_id,))
+            role = cursor.fetchone()
+
+            if not role:
+                return 'Роль с указанным ID не найдена'
+
+            # Обновляем роль пользователя
+            sql_update_role = 'UPDATE UserRoles SET role_id = %s WHERE user_id = %s'
+            cursor.execute(sql_update_role, (new_role_id, user_id))
+            connection.commit()
+
+            return 'Роль пользователя успешно изменена'
+    finally:
+        # Всегда закрываем соединение, чтобы избежать утечек
+        connection.close()
+# Задание роли для пользователя
+def set_user_role(connection, user_id, new_role_id=None):
+    try:
+        with connection.cursor() as cursor:
+            # Проверяем, существует ли пользователь с таким ID
+            sql_check_user = 'SELECT * FROM Users WHERE id = %s'
+            cursor.execute(sql_check_user, (user_id,))
+            user = cursor.fetchone()
+
+            if not user:
+                return 'Пользователь с указанным ID не найден'
+
+            # Если новый ID роли указан, проверяем его существование
+            if new_role_id is not None:
+                sql_check_role = 'SELECT * FROM Roles WHERE id = %s'
+                cursor.execute(sql_check_role, (new_role_id,))
+                role = cursor.fetchone()
+
+                if not role:
+                    return 'Роль с указанным ID не найдена'
+
+            # Если новый ID роли указан, устанавливаем его пользователю
+            if new_role_id is not None:
+                sql_set_role = 'INSERT INTO UserRoles (user_id, role_id) VALUES (%s, %s) ON DUPLICATE KEY UPDATE role_id = %s'
+                cursor.execute(sql_set_role, (user_id, new_role_id, new_role_id))
+                connection.commit()
+                return 'Роль пользователя успешно установлена'
+            else:
+                return 'Новый ID роли не указан'
+    finally:
+        # Всегда закрываем соединение, чтобы избежать утечек
+        connection.close()
 
 # Сессии
 # Функция для создания сеанса входа в систему
@@ -282,37 +343,6 @@ def register_user(connection, first_name, last_name, email, phone_number, passwo
                 cursor.execute(sql, (first_name, last_name, email, phone_number, password, other_personal_data, other_doctor_data))
                 connection.commit()
                 return True
-    finally:
-        # Всегда закрываем соединение, чтобы избежать утечек
-        connection.close()
-    
-    return False
-# Функция для изменения роли пользователя
-def change_user_role(connection, user_id, new_role_id):
-    try:
-        with connection.cursor() as cursor:
-            # Проверяем, существует ли пользователь с таким ID
-            sql_check_user = 'SELECT * FROM Users WHERE id = %s'
-            cursor.execute(sql_check_user, (user_id,))
-            user = cursor.fetchone()
-
-            if not user:
-                return 'Пользователь с указанным ID не найден'
-
-            # Проверяем, существует ли роль с таким ID
-            sql_check_role = 'SELECT * FROM Roles WHERE id = %s'
-            cursor.execute(sql_check_role, (new_role_id,))
-            role = cursor.fetchone()
-
-            if not role:
-                return 'Роль с указанным ID не найдена'
-
-            # Обновляем роль пользователя
-            sql_update_role = 'UPDATE UserRoles SET role_id = %s WHERE user_id = %s'
-            cursor.execute(sql_update_role, (new_role_id, user_id))
-            connection.commit()
-
-            return 'Роль пользователя успешно изменена'
     finally:
         # Всегда закрываем соединение, чтобы избежать утечек
         connection.close()
@@ -539,11 +569,48 @@ def search_images(connection, criteria):
         # Всегда закрываем соединение, чтобы избежать утечек
         connection.close()         
 
+
+# Доработать телефон
 def main():
-    # Установление соединения с базой данных
-    connection = connect_to_database()
-    if connection:
-        print('соединение установленно')
-        connection.close()
+
+    # Тест 1 регистрация и аутентификация
+    try:
+        connection = connect_to_database()
+        register_user(connection, 'Полянский', 'Александр', 'ak.polyanskiy@gmail.com', '+79880005786', '135351tanki', 'Некое описание про меня')
+
+        connection = connect_to_database()
+        my_data = authenticate_user(connection, 'ak.polyanskiy@gmail.com', '135351tanki')
+    except: print('Тест 1 ошибка')
+
+    # Тест 2 работа с ролями
+    try:
+        connection = connect_to_database()
+        create_new_role(connection, 'ROLE1')
+
+        connection = connect_to_database()
+        create_new_role(connection, 'ROLE2')
+
+        connection = connect_to_database()
+        all_roles = get_all_roles(connection)
+
+        connection = connect_to_database()
+        delete_role(connection, all_roles[0]['id'])
+    except: print('Тест 3 ошибка')
+    
+    # Тест 4
+    try:
+        connection = connect_to_database()
+        all_roles = get_all_roles(connection)
+
+        connection = connect_to_database()
+        set_user_role(connection, my_data['id'], all_roles[0]['id'])
+
+        connection = connect_to_database()
+        create_new_role(connection, 'ROLE51')
+
+        connection = connect_to_database()
+        change_user_role(connection, my_data['id'], all_roles[1]['id'])
+    except: print('Тест 4 ошибка') 
+
 if __name__ == '__main__':
     main()
