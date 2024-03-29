@@ -7,10 +7,7 @@ import string
 import random
 import os
 
-os.environ['DB_HOST'] = '82.97.249.199'
-os.environ['DB_USER'] = 'gen_user'
-os.environ['DB_PASSWORD'] = 'h2d@N:i?9tSZoW'
-os.environ['DB_NAME'] = 'graduate_work_database'
+
 
 # Параметры подключения к базе данных
 DB_HOST = os.getenv('DB_HOST')
