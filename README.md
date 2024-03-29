@@ -2,4 +2,5 @@
 #### Фикции и API лежащие на облаке для взаимодействия с базой данных.
 #### Структура базы данных mysql
 
-![Untitled](https://github.com/Alexsandr52/Database_management_graduate-work/assets/43495209/9346f124-0be4-4da7-8fb6-95fd762d5055)
+![Untitled](https://github.com/Alexsandr52/Database_management_graduate_work/assets/43495209/cfa14350-be87-4283-923f-1a4e60761f4b)
+
