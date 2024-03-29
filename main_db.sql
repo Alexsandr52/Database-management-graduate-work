@@ -1,4 +1,7 @@
+SET FOREIGN_KEY_CHECKS = 0;
+
 -- Пользователи
+DROP TABLE IF EXISTS Users;
 CREATE TABLE Users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     first_name VARCHAR(255) NOT NULL,
@@ -8,16 +11,17 @@ CREATE TABLE Users (
     password VARCHAR(255) NOT NULL,
     other_personal_data TEXT,
     other_doctor_data TEXT
-    -- CHECK (phone_number >= 7000000000 AND phone_number <= 7999999999) -- Пример ограничения диапазона для России
 );
 
 -- Роли
+DROP TABLE IF EXISTS Roles;
 CREATE TABLE Roles (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL
 );
 
 -- Сопоставления пользователя и роли (Решает вопрос если пользователь и врач и пациент)
+DROP TABLE IF EXISTS UserRoles;
 CREATE TABLE UserRoles (
     user_id INT NOT NULL,
     role_id INT NOT NULL,
@@ -27,6 +31,7 @@ CREATE TABLE UserRoles (
 );
 
 -- Медецинские изображения
+DROP TABLE IF EXISTS Images;
 CREATE TABLE Images (
     id INT AUTO_INCREMENT PRIMARY KEY,
     patient_id INT NOT NULL,
@@ -37,6 +42,7 @@ CREATE TABLE Images (
 );
 
 -- Результаты анализа по изображению
+DROP TABLE IF EXISTS AnalysisResults;
 CREATE TABLE AnalysisResults (
     id INT AUTO_INCREMENT PRIMARY KEY,
     image_id INT NOT NULL,
@@ -46,6 +52,7 @@ CREATE TABLE AnalysisResults (
 );
 
 -- Доктор и его пациент (решает вопрос возможности доступа нескольких докторов к одному изображению)
+DROP TABLE IF EXISTS DoctorPatient;
 CREATE TABLE DoctorPatient (
     doctor_id INT NOT NULL,
     patient_id INT NOT NULL,
@@ -55,6 +62,7 @@ CREATE TABLE DoctorPatient (
 );
 
 -- Уведомления для пользователей
+DROP TABLE IF EXISTS UserNotifications;
 CREATE TABLE UserNotifications (
     notification_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
@@ -62,6 +70,7 @@ CREATE TABLE UserNotifications (
 );
 
 -- Текст уведомлений
+DROP TABLE IF EXISTS NotificationInfo;
 CREATE TABLE NotificationInfo (
     notification_id INT NOT NULL,
     notification_text TEXT,
@@ -71,6 +80,7 @@ CREATE TABLE NotificationInfo (
 );
 
 -- Сессии для подключения
+DROP TABLE IF EXISTS UserSessions;
 CREATE TABLE UserSessions (
     session_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
@@ -80,3 +90,5 @@ CREATE TABLE UserSessions (
     INDEX (expiry_time),  -- Индекс для быстрого поиска устаревших сеансов
     FOREIGN KEY (user_id) REFERENCES Users(id)
 );
+
+SET FOREIGN_KEY_CHECKS = 1;

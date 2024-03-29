@@ -7,7 +7,7 @@ import string
 import random
 import os
 
-os.environ['DB_HOST'] = ''
+os.environ['DB_HOST'] = '82.97.249.199'
 os.environ['DB_USER'] = 'gen_user'
 os.environ['DB_PASSWORD'] = 'h2d@N:i?9tSZoW'
 os.environ['DB_NAME'] = 'graduate_work_database'
@@ -32,6 +32,8 @@ def connect_to_database():
     
     return None
 
+# Вспомогательные функции
+# Вставить принудительно в таблицу
 def insert_data(connection, variables, data, table_name):
     try:
         # Создание объекта курсора
@@ -46,7 +48,7 @@ def insert_data(connection, variables, data, table_name):
         print('Запись успешно добавлена в базу данных.')
     except Exception as e:
         print('Ошибка при добавлении записи в базу данных:', e)
-
+# Достать всее из таблицы по имени
 def fetch_records(connection, table):
     try:
         with connection.cursor() as cursor:
@@ -274,7 +276,7 @@ def create_session(connection, user_id):
             current_time = datetime.datetime.now()
 
             # Вставляем запись о сеансе в базу данных
-            sql_insert_session = "INSERT INTO UserSessions (user_id, session_token, expiry_time) VALUES (%s, %s, %s)"
+            sql_insert_session = 'INSERT INTO UserSessions (user_id, session_token, expiry_time) VALUES (%s, %s, %s)'
             cursor.execute(sql_insert_session, (user_id, hashed_token, current_time))
             connection.commit()
 
@@ -290,7 +292,7 @@ def verify_session(connection, session_token):
             current_time = datetime.datetime.now()
 
             # Получаем запись о сеансе из базы данных по токену
-            sql_select_session = "SELECT * FROM UserSessions WHERE session_token = %s AND expiry_time > %s"
+            sql_select_session = 'SELECT * FROM UserSessions WHERE session_token = %s AND expiry_time > %s'
             cursor.execute(sql_select_session, (hashlib.sha256(session_token.encode()).hexdigest(), current_time))
             session = cursor.fetchone()
 
@@ -570,48 +572,28 @@ def search_images(connection, criteria):
         # Всегда закрываем соединение, чтобы избежать утечек
         connection.close()         
 
+# Сброс бд
+# Создать таблицы 
+def execute_sql_file(connection, sql_file):
+    try:
+        with open(sql_file, 'r') as file:
+            sql_statements = file.read().split(';')
+            with connection.cursor() as cursor:
+                for sql_statement in sql_statements:
+                    if sql_statement.strip():
+                        cursor.execute(sql_statement)
+        connection.commit()
+        print('SQL-файл успешно выполнен.')
+    except pymysql.Error as e:
+        print('Ошибка выполнения SQL-файла:', e)
+    finally:
+        # Всегда закрываем соединение, чтобы избежать утечек
+        connection.close() 
 
-# Доработать телефон
+# Пересоздать бд
 def main():
-
-    # Тест 1 регистрация и аутентификация
-    try:
-        connection = connect_to_database()
-        register_user(connection, 'Полянский', 'Александр', 'ak.polyanskiy@gmail.com', '+79880005786', '135351tanki', 'Некое описание про меня')
-
-        connection = connect_to_database()
-        my_data = authenticate_user(connection, 'ak.polyanskiy@gmail.com', '135351tanki')
-    except: print('Тест 1 ошибка')
-
-    # Тест 2 работа с ролями
-    try:
-        connection = connect_to_database()
-        create_new_role(connection, 'ROLE1')
-
-        connection = connect_to_database()
-        create_new_role(connection, 'ROLE2')
-
-        connection = connect_to_database()
-        all_roles = get_all_roles(connection)
-
-        connection = connect_to_database()
-        delete_role(connection, all_roles[0]['id'])
-    except: print('Тест 3 ошибка')
-    
-    # Тест 4
-    try:
-        connection = connect_to_database()
-        all_roles = get_all_roles(connection)
-
-        connection = connect_to_database()
-        set_user_role(connection, my_data['id'], all_roles[0]['id'])
-
-        connection = connect_to_database()
-        create_new_role(connection, 'ROLE51')
-
-        connection = connect_to_database()
-        change_user_role(connection, my_data['id'], all_roles[1]['id'])
-    except: print('Тест 4 ошибка') 
-
+    connection = connect_to_database()
+    execute_sql_file(connection, 'main_db.sql')
+     
 if __name__ == '__main__':
     main()
