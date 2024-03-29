@@ -11,4 +11,3 @@ def encode_image_to_bytes(image_path):
 def decode_bytes_to_image(img_bytes):
     img = Image.open(io.BytesIO(img_bytes))
     return img
-
