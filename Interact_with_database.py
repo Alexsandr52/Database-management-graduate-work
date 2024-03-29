@@ -25,7 +25,7 @@ def connect_to_database():
                                      password=DB_PASSWORD,
                                      database=DB_NAME,
                                      cursorclass=pymysql.cursors.DictCursor)
-        print('Соединение с базой данных успешно установлено.')
+        # print('Соединение с базой данных успешно установлено.')
         return connection
     
     except Exception as e: print('Ошибка при подключении к базе данных:', e)
@@ -260,6 +260,36 @@ def set_user_role(connection, user_id, new_role_id=None):
     finally:
         # Всегда закрываем соединение, чтобы избежать утечек
         connection.close()
+# Получение пользователей по id
+def get_users_by_role(connection, role_name):
+    try:
+        with connection.cursor() as cursor:
+            # Получаем ID роли по ее названию
+            cursor.execute("SELECT id FROM Roles WHERE name = %s", (role_name,))
+            role_id = cursor.fetchone()
+
+            if not role_id:
+                return f"Роль с названием '{role_name}' не найдена."
+
+            # Получаем пользователей с указанной ролью
+            sql = """
+                SELECT u.*
+                FROM Users u
+                INNER JOIN UserRoles ur ON u.id = ur.user_id
+                INNER JOIN Roles r ON ur.role_id = r.id
+                WHERE r.name = %s
+            """
+            cursor.execute(sql, (role_name,))
+            users = cursor.fetchall()
+
+            if not users:
+                return f"Нет пользователей с ролью '{role_name}'."
+
+            return users
+    except pymysql.Error as e:
+        return f"Ошибка при получении пользователей с ролью '{role_name}': {e}"
+    finally:
+        connection.close()
 
 # Сессии
 # Функция для создания сеанса входа в систему
@@ -355,14 +385,14 @@ def assign_patient_to_doctor(connection, doctor_id, patient_id):
     try:
         with connection.cursor() as cursor:
             # Проверяем, что доктор и пациент существуют в базе данных
-            sql_check_doctor = 'SELECT * FROM Users WHERE id = %s AND other_doctor_data IS NOT NULL'
+            sql_check_doctor = 'SELECT * FROM Users WHERE id = %s'
             cursor.execute(sql_check_doctor, (doctor_id,))
             doctor = cursor.fetchone()
 
             if not doctor:
                 return 'Доктор с таким идентификатором не найден или не является врачом'
 
-            sql_check_patient = 'SELECT * FROM Users WHERE id = %s AND other_personal_data IS NOT NULL'
+            sql_check_patient = 'SELECT * FROM Users WHERE id = %s'
             cursor.execute(sql_check_patient, (patient_id,))
             patient = cursor.fetchone()
 
