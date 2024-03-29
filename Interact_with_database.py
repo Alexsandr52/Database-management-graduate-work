@@ -265,29 +265,29 @@ def get_users_by_role(connection, role_name):
     try:
         with connection.cursor() as cursor:
             # Получаем ID роли по ее названию
-            cursor.execute("SELECT id FROM Roles WHERE name = %s", (role_name,))
+            cursor.execute('SELECT id FROM Roles WHERE name = %s', (role_name,))
             role_id = cursor.fetchone()
 
             if not role_id:
-                return f"Роль с названием '{role_name}' не найдена."
+                return f'Роль с названием {role_name} не найдена.'
 
             # Получаем пользователей с указанной ролью
-            sql = """
+            sql = '''
                 SELECT u.*
                 FROM Users u
                 INNER JOIN UserRoles ur ON u.id = ur.user_id
                 INNER JOIN Roles r ON ur.role_id = r.id
                 WHERE r.name = %s
-            """
+            '''
             cursor.execute(sql, (role_name,))
             users = cursor.fetchall()
 
             if not users:
-                return f"Нет пользователей с ролью '{role_name}'."
+                return f'Нет пользователей с ролью {role_name}.'
 
             return users
     except pymysql.Error as e:
-        return f"Ошибка при получении пользователей с ролью '{role_name}': {e}"
+        return f'Ошибка при получении пользователей с ролью {role_name}: {e}'
     finally:
         connection.close()
 
