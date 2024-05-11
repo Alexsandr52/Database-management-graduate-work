@@ -38,11 +38,11 @@ def register():
     result = register_user(connection, **data)
 
     if result:
-        return jsonify({'message': 'User registered successfully'}), 201
+        return jsonify({'message': 'Успешно'}), 201
     else:
-        return jsonify({'error': 'User with that email or phone number already exists'}), 400
+        return jsonify({'error': 'Пользователь с таким номером или почтой уже существует'}), 400
 # Получить уведы для пользователя
-@app.route('/get_notifications', methods=['GET'])
+@app.route('/notifications', methods=['GET'])
 @jwt_required()
 def get_notifications():
     current_user = get_jwt_identity()
@@ -52,6 +52,21 @@ def get_notifications():
     res = json.dumps(notifications, ensure_ascii=False).encode('utf8')
     return Response(res, status=200)
 
+@app.route('/imagebyid', methods=['GET', 'POST'])
+@jwt_required()
+def get_image_info_by_id():
+    current_user = get_jwt_identity()
+    connection = connect_to_database()
+    print(current_user)
+    # if current_user['role_id'] == 3:
+    #     data = get_image_info_by_patient_id(connection, current_user['id'])
+    # elif current_user['role_id'] in [1,2] and request.method == 'POST':
+    #     data = get_image_info_by_patient_id(connection, request.get_json()['patient_id'])
+    # else:
+    #     data = 'Что-то не так'
+    data =' ds'
+    data = json.dumps(data, ensure_ascii=False).encode('utf8')
+    return Response(data, status=200)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8080)
