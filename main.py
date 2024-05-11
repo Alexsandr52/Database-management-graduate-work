@@ -64,6 +64,7 @@ def get_image_info_by_id():
     #     data = get_image_info_by_patient_id(connection, request.get_json()['patient_id'])
     # else:
     #     data = 'Что-то не так'
+
     data =' ds'
     data = json.dumps(data, ensure_ascii=False).encode('utf8')
     return Response(data, status=200)
