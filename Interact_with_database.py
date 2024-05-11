@@ -7,13 +7,16 @@ import string
 import random
 import os
 
-
+DB_HOST = '147.45.107.2'
+DB_USER = 'gen_user'
+DB_PASSWORD = '0gjT@elYIlWsK2'
+DB_NAME = 'graduate_work_db'
 
 # Параметры подключения к базе данных
-DB_HOST = os.getenv('DB_HOST')
-DB_USER = os.getenv('DB_USER')
-DB_PASSWORD = os.getenv('DB_PASSWORD')
-DB_NAME = os.getenv('DB_NAME')
+# DB_HOST = os.getenv('DB_HOST')
+# DB_USER = os.getenv('DB_USER')
+# DB_PASSWORD = os.getenv('DB_PASSWORD')
+# DB_NAME = os.getenv('DB_NAME')
 
 # Подключение к базе данных
 def connect_to_database():
@@ -288,49 +291,6 @@ def get_users_by_role(connection, role_name):
     finally:
         connection.close()
 
-# Сессии
-# Функция для создания сеанса входа в систему
-def create_session(connection, user_id):
-    try:
-        with connection.cursor() as cursor:
-            # Генерируем случайный токен для сеанса
-            session_token = secrets.token_hex(16)
-
-            # Хешируем токен для безопасного хранения в базе данных
-            hashed_token = hashlib.sha256(session_token.encode()).hexdigest()
-
-            # Получаем текущую дату и время
-            current_time = datetime.datetime.now()
-
-            # Вставляем запись о сеансе в базу данных
-            sql_insert_session = 'INSERT INTO UserSessions (user_id, session_token, expiry_time) VALUES (%s, %s, %s)'
-            cursor.execute(sql_insert_session, (user_id, hashed_token, current_time))
-            connection.commit()
-
-            return session_token
-    finally:
-        # Всегда закрываем соединение, чтобы избежать утечек
-        connection.close()
-# Функция для проверки существования и валидности сеанса
-def verify_session(connection, session_token):
-    try:
-        with connection.cursor() as cursor:
-            # Получаем текущее время
-            current_time = datetime.datetime.now()
-
-            # Получаем запись о сеансе из базы данных по токену
-            sql_select_session = 'SELECT * FROM UserSessions WHERE session_token = %s AND expiry_time > %s'
-            cursor.execute(sql_select_session, (hashlib.sha256(session_token.encode()).hexdigest(), current_time))
-            session = cursor.fetchone()
-
-            if session:
-                return True, session['user_id']
-            else:
-                return False, None
-    finally:
-        # Всегда закрываем соединение, чтобы избежать утечек
-        connection.close()
-
 # Взаимодействие с пользователем    
 # Аутентификация пользователя по электронной почте или номеру телефона и паролю
 def authenticate_user(connection, email_or_phone, password):
@@ -354,8 +314,8 @@ def authenticate_user(connection, email_or_phone, password):
                 }
     finally:
         connection.close()
-# Функция для регистрации нового пользователя
-def register_user(connection, first_name, last_name, email, phone_number, password, other_personal_data=None, other_doctor_data=None):
+# Функция для регистрации нового пользователя OLD
+def register_user(connection, first_name, email, password, last_name=None, phone_number=None, other_personal_data=None, other_doctor_data=None):
     try:
         with connection.cursor() as cursor:
             # Проверяем, что пользователь с такой электронной почтой или номером телефона не существует
@@ -376,6 +336,38 @@ def register_user(connection, first_name, last_name, email, phone_number, passwo
     finally:
         # Всегда закрываем соединение, чтобы избежать утечек
         connection.close()
+# Функция для регистрации нового пользователя NEW
+def register_user(connection, **kwargs):
+    try:
+        with connection.cursor() as cursor:
+            # Проверяем, что пользователь с такой электронной почтой или номером телефона не существует
+            sql = 'SELECT * FROM Users WHERE email = %s OR phone_number = %s'
+            cursor.execute(sql, (kwargs.get('email'), kwargs.get('phone_number')))
+            existing_user = cursor.fetchone()
+
+            if existing_user:
+                # Если пользователь уже существует, возвращаем сообщение об ошибке
+                return False
+            
+            else:
+                # Добавляем нового пользователя в базу данных
+                sql = 'INSERT INTO Users (first_name, last_name, email, phone_number, password, other_personal_data, other_doctor_data) VALUES (%s, %s, %s, %s, %s, %s, %s)'
+                cursor.execute(sql, (
+                    kwargs.get('first_name'),
+                    kwargs.get('last_name'),
+                    kwargs.get('email'),
+                    kwargs.get('phone_number'),
+                    kwargs.get('password'),
+                    kwargs.get('other_personal_data'),
+                    kwargs.get('other_doctor_data')
+                ))
+                connection.commit()
+                return True
+    finally:
+        # Всегда закрываем соединение, чтобы избежать утечек
+        connection.close()
+
+
 # Функция для привязки пациента к доктору
 def assign_patient_to_doctor(connection, doctor_id, patient_id):
     

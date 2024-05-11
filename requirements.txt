@@ -1,0 +1,5 @@
+faker
+Pillow
+pymysql
+flask
+flask_jwt_extended
