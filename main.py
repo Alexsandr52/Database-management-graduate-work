@@ -20,13 +20,16 @@ def login():
         connection = connect_to_database()
         user = authenticate_user(connection, login, password)
 
-        if user != {}:
+        if user != None:
             expires = timedelta(days=3)
             access_token = create_access_token(identity=user, expires_delta=expires)
             return jsonify(access_token=access_token), 200
+        
+        raise
     
     except:
-            return jsonify({'msg': 'Неверное имя пользователя или пароль'}), 401    
+        res = json.dumps({'msg': 'Неверное имя пользователя или пароль'}, ensure_ascii=False).encode('utf8')
+        return Response(res, status=401)    
 # Регистрация в приложении
 @app.route('/register', methods=['POST'])
 def register():
