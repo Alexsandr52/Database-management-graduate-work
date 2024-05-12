@@ -11,6 +11,7 @@ app.config['JSON_AS_ASCII'] = False
 jwt = JWTManager(app)
 
 # Получение токена
+# curl -X POST -H "Content-Type: application/json" -d '{"login": "john@example.com", "password": "pass123"}' http://127.0.0.1:8080/login
 @app.route('/login', methods=['POST'])
 def login():
     try:
@@ -30,21 +31,27 @@ def login():
     except:
         res = json.dumps({'msg': 'Неверное имя пользователя или пароль'}, ensure_ascii=False).encode('utf8')
         return Response(res, status=401)    
+
 # Регистрация в приложении
+# curl -X POST -H "Content-Type: application/json" -d '{"first_name": "Alexsand", "last_name": "Polyanskiy", "email": "Alex@gmail.com", "phone_number": "999999999", "password": "12345"}' http://localhost:8080/register 
 @app.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
     if not data:
-        return jsonify({'error': 'No data provided'}), 400
+        response = json.dumps({'error': 'No data provided'}, ensure_ascii=False).encode('utf8')
     
     connection = connect_to_database()
     result = register_user(connection, **data)
 
     if result:
-        return jsonify({'message': 'Успешно'}), 201
+        response = json.dumps({'message': 'Успешно'}, ensure_ascii=False).encode('utf8')
     else:
-        return jsonify({'error': 'Пользователь с таким номером или почтой уже существует'}), 400
+        response = json.dumps({'error': 'Пользователь с таким номером или почтой уже существует'}, ensure_ascii=False).encode('utf8')
+
+    return Response(response=response, status=200)
+
 # Получить уведы для пользователя
+# curl -X GET http://localhost:8080/get_notifications -H 'Authorization: Bearer '
 @app.route('/notifications', methods=['GET'])
 @jwt_required()
 def get_notifications():
