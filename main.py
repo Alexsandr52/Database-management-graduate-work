@@ -1,8 +1,8 @@
-from flask import Flask, Response, request, jsonify
-from datetime import timedelta
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
-import json
+from flask import Flask, Response, request, jsonify
 from Interact_with_database import *
+from datetime import timedelta
+import json
 
 app = Flask(__name__)
 # Настройка секретного ключа для подписи токенов
@@ -62,20 +62,24 @@ def get_notifications():
     res = json.dumps(notifications, ensure_ascii=False).encode('utf8')
     return Response(res, status=200)
 
+# Получение изображений как для пациента так и врача
+# curl -X GET http://localhost:8080/imagebyid -H "Authorization: Bearer "
+# curl -X POST http://localhost:8080/imagebyid -H "Authorization: Bearer " -H "Content-Type: application/json" -d '{"patient_id": "11"}'
 @app.route('/imagebyid', methods=['GET', 'POST'])
 @jwt_required()
 def get_image_info_by_id():
     current_user = get_jwt_identity()
     connection = connect_to_database()
     print(current_user)
-    # if current_user['role_id'] == 3:
-    #     data = get_image_info_by_patient_id(connection, current_user['id'])
-    # elif current_user['role_id'] in [1,2] and request.method == 'POST':
-    #     data = get_image_info_by_patient_id(connection, request.get_json()['patient_id'])
-    # else:
-    #     data = 'Что-то не так'
+    if current_user['role_id'] == 3:
+        data = get_image_info_by_patient_id(connection, current_user['id'])
+    elif current_user['role_id'] in [1, 2] and request.method == 'POST':
+        patient_id = request.get_json().get('patient_id')  
+        data = get_image_info_by_patient_id(connection, patient_id)
+        for img in data: img['upload_date'] = str(img['upload_date'])
+    else:
+        data = 'Что-то не так'
 
-    data =' ds'
     data = json.dumps(data, ensure_ascii=False).encode('utf8')
     return Response(data, status=200)
 
