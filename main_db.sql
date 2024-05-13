@@ -35,7 +35,7 @@ DROP TABLE IF EXISTS Images;
 CREATE TABLE Images (
     id INT AUTO_INCREMENT PRIMARY KEY,
     patient_id INT NOT NULL,
-    image_data LONGBLOB NOT NULL, -- Здесь предполагается хранение байтового представления
+    image_data TEXT NOT NULL, -- Здесь предполагается хранение байтового представления
     upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     processing_status ENUM('in processing', 'processed', 'waiting') NOT NULL DEFAULT 'waiting',
     FOREIGN KEY (patient_id) REFERENCES Users(id)

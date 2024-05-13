@@ -2,12 +2,16 @@
 import hashlib
 import datetime
 import pymysql
+import requests
 import secrets
 import string
 import random
 import os
 
-
+DB_HOST = '147.45.107.2'
+DB_USER = 'gen_user'
+DB_PASSWORD = '0gjT@elYIlWsK2'
+DB_NAME = 'graduate_work_db'
 
 # Параметры подключения к базе данных
 # DB_HOST = os.getenv('DB_HOST')
@@ -460,6 +464,20 @@ def delete_image(connection, image_id):
     finally:
         # Всегда закрываем соединение, чтобы избежать утечек
         connection.close()
+# Загрузка изображения в бакет
+def upload_image_to_bucket(image):
+    url = "https://alexsandr52-img-to-bucket-falsk-243c.twc1.net/upload"
+    files = {'image': image}
+
+    try:
+        response = requests.post(url, files=files)
+        if response.status_code == 200:
+            return response.json()['image_url']
+        else:
+            return None
+    except Exception as e:
+        print("Error uploading image:", e)
+        return None
 
 # Для докторов
 # Функция для получения списка пациентов, которые привязаны к определенному доктору

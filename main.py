@@ -62,6 +62,34 @@ def get_notifications():
     res = json.dumps(notifications, ensure_ascii=False).encode('utf8')
     return Response(res, status=200)
 
+@app.route('/sendimagebyid', methods=['POST'])
+@jwt_required()
+def send_img():
+    current_user = get_jwt_identity()
+    if current_user['role_id'] == 3:  # Пациент
+        patient_id = current_user['id']
+    elif current_user['role_id'] in [1, 2]:  # Врач
+        # Получаем ID пациента из запроса
+        patient_id = request.form.get('patient_id')
+        if not patient_id:
+            return jsonify({'error': 'Patient ID is required for doctors'}), 400
+    else:
+        return jsonify({'error': 'Permission denied'}), 403
+
+    # Получаем данные изображения из запроса
+    if 'image' not in request.files:
+        return jsonify({'error': 'No image provided'}), 400
+    image = request.files['image']
+
+    # Загружаем изображение на сервер
+    image_url = upload_image_to_bucket(image)
+
+    # Сохраняем информацию об изображении в базу данных
+    connection = connect_to_database()
+    upload_image(connection, patient_id, image_url)
+
+    return jsonify({'image_url': image_url}), 200
+
 # Получение изображений как для пациента так и врача
 # curl -X GET http://localhost:8080/imagebyid -H "Authorization: Bearer "
 # curl -X POST http://localhost:8080/imagebyid -H "Authorization: Bearer " -H "Content-Type: application/json" -d '{"patient_id": "11"}'
