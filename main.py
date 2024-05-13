@@ -11,7 +11,6 @@ app.config['JSON_AS_ASCII'] = False
 jwt = JWTManager(app)
 
 # Получение токена
-# curl -X POST -H "Content-Type: application/json" -d '{"login": "john@example.com", "password": "pass123"}' http://127.0.0.1:8080/login
 @app.route('/login', methods=['POST'])
 def login():
     try:
@@ -20,6 +19,10 @@ def login():
         
         connection = connect_to_database()
         user = authenticate_user(connection, login, password)
+        
+        if user['role_id'] == None: 
+            connection = connect_to_database()
+            set_user_role(connection, user['id'], 2)
 
         if user != None:
             expires = timedelta(days=3)
@@ -33,7 +36,6 @@ def login():
         return Response(res, status=401)    
 
 # Регистрация в приложении
-# curl -X POST -H "Content-Type: application/json" -d '{"first_name": "Alexsand", "last_name": "Polyanskiy", "email": "Alex@gmail.com", "phone_number": "999999999", "password": "12345"}' http://localhost:8080/register 
 @app.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
@@ -51,7 +53,6 @@ def register():
     return Response(response=response, status=200)
 
 # Получить уведы для пользователя
-# curl -X GET http://localhost:8080/get_notifications -H 'Authorization: Bearer '
 @app.route('/notifications', methods=['GET'])
 @jwt_required()
 def get_notifications():
@@ -62,14 +63,15 @@ def get_notifications():
     res = json.dumps(notifications, ensure_ascii=False).encode('utf8')
     return Response(res, status=200)
 
+# Отправить изображение как врач или пользователь
 @app.route('/sendimagebyid', methods=['POST'])
 @jwt_required()
 def send_img():
     current_user = get_jwt_identity()
-    if current_user['role_id'] == 3:  # Пациент
+    print(current_user)
+    if current_user['role_id'] == 2:
         patient_id = current_user['id']
-    elif current_user['role_id'] in [1, 2]:  # Врач
-        # Получаем ID пациента из запроса
+    elif current_user['role_id'] in [1, 3]:
         patient_id = request.form.get('patient_id')
         if not patient_id:
             return jsonify({'error': 'Patient ID is required for doctors'}), 400
@@ -91,25 +93,64 @@ def send_img():
     return jsonify({'image_url': image_url}), 200
 
 # Получение изображений как для пациента так и врача
-# curl -X GET http://localhost:8080/imagebyid -H "Authorization: Bearer "
-# curl -X POST http://localhost:8080/imagebyid -H "Authorization: Bearer " -H "Content-Type: application/json" -d '{"patient_id": "11"}'
 @app.route('/imagebyid', methods=['GET', 'POST'])
 @jwt_required()
 def get_image_info_by_id():
     current_user = get_jwt_identity()
     connection = connect_to_database()
     print(current_user)
-    if current_user['role_id'] == 3:
+    if current_user['role_id'] == 2:
         data = get_image_info_by_patient_id(connection, current_user['id'])
-    elif current_user['role_id'] in [1, 2] and request.method == 'POST':
+    elif current_user['role_id'] in [1, 3] and request.method == 'POST':
         patient_id = request.get_json().get('patient_id')  
         data = get_image_info_by_patient_id(connection, patient_id)
-        for img in data: img['upload_date'] = str(img['upload_date'])
     else:
         data = 'Что-то не так'
 
+    if type(data) != str:
+        for img in data: img['upload_date'] = str(img['upload_date'])
+
     data = json.dumps(data, ensure_ascii=False).encode('utf8')
     return Response(data, status=200)
+
+# Обновление статуса
+@app.route('/update_image', methods=['POST'])
+@jwt_required()
+def update_image():
+    current_user = get_jwt_identity()
+    if current_user['role_id'] != 1:  # Предположим, что только доктор может обновлять информацию об изображении
+        return jsonify({'error': 'Permission denied'}), 403
+
+    # Получаем данные из тела запроса
+    image_id = request.json.get('image_id')
+    processing_status = request.json.get('processing_status')
+
+    if not all([image_id, processing_status]):
+        return jsonify({'error': 'Both image_id and processing_status are required'}), 400
+
+    connection = connect_to_database()
+    try:
+        result = update_image_info(connection, image_id, processing_status)
+        return Response(json.dumps({'message': result}, ensure_ascii=False).encode('utf8'), status=200)
+    except Exception as e: return jsonify({'error': str(e)}), 500
+
+@app.route('/patients_by_doctor', methods=['GET'])
+@jwt_required()
+def patients_by_doctor():
+    current_user = get_jwt_identity()
+    if current_user['role_id'] != 1:
+        return jsonify({'error': 'Permission denied'}), 403
+
+    doctor_id = current_user['id']
+
+    connection = connect_to_database()
+    try:
+        patients_ids = get_patients_by_doctor_id(connection, doctor_id)
+        patients_array = [patient_id['patient_id'] for patient_id in patients_ids]
+        return jsonify({'patients':patients_array}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8080)

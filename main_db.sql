@@ -9,8 +9,7 @@ CREATE TABLE Users (
     email VARCHAR(255) NOT NULL,
     phone_number VARCHAR(10) UNIQUE,
     password VARCHAR(255) NOT NULL,
-    other_personal_data TEXT,
-    other_doctor_data TEXT
+    other_personal_data TEXT
 );
 
 -- Роли
@@ -79,16 +78,5 @@ CREATE TABLE NotificationInfo (
     FOREIGN KEY (notification_id) REFERENCES UserNotifications(notification_id)
 );
 
--- Сессии для подключения
-DROP TABLE IF EXISTS UserSessions;
-CREATE TABLE UserSessions (
-    session_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    session_token VARCHAR(64) NOT NULL,
-    expiry_time TIMESTAMP NOT NULL,
-    UNIQUE (session_token),  -- Гарантирует уникальность токена сеанса
-    INDEX (expiry_time),  -- Индекс для быстрого поиска устаревших сеансов
-    FOREIGN KEY (user_id) REFERENCES Users(id)
-);
 
 SET FOREIGN_KEY_CHECKS = 1;

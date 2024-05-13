@@ -8,10 +8,7 @@ import string
 import random
 import os
 
-DB_HOST = '147.45.107.2'
-DB_USER = 'gen_user'
-DB_PASSWORD = '0gjT@elYIlWsK2'
-DB_NAME = 'graduate_work_db'
+
 
 # Параметры подключения к базе данных
 # DB_HOST = os.getenv('DB_HOST')
@@ -316,7 +313,7 @@ def authenticate_user(connection, email_or_phone, password):
     finally:
         connection.close()
 # Функция для регистрации нового пользователя OLD
-def register_user(connection, first_name, email, password, last_name=None, phone_number=None, other_personal_data=None, other_doctor_data=None):
+def register_user(connection, first_name, email, password, last_name=None, phone_number=None, other_personal_data=None,):
     try:
         with connection.cursor() as cursor:
             # Проверяем, что пользователь с такой электронной почтой или номером телефона не существует
@@ -330,8 +327,8 @@ def register_user(connection, first_name, email, password, last_name=None, phone
             
             else:
                 # Добавляем нового пользователя в базу данных
-                sql = 'INSERT INTO Users (first_name, last_name, email, phone_number, password, other_personal_data, other_doctor_data) VALUES (%s, %s, %s, %s, %s, %s, %s)'
-                cursor.execute(sql, (first_name, last_name, email, phone_number, password, other_personal_data, other_doctor_data))
+                sql = 'INSERT INTO Users (first_name, last_name, email, phone_number, password, other_personal_data) VALUES (%s, %s, %s, %s, %s, %s)'
+                cursor.execute(sql, (first_name, last_name, email, phone_number, password, other_personal_data))
                 connection.commit()
                 return True
     finally:
@@ -352,15 +349,14 @@ def register_user(connection, **kwargs):
             
             else:
                 # Добавляем нового пользователя в базу данных
-                sql = 'INSERT INTO Users (first_name, last_name, email, phone_number, password, other_personal_data, other_doctor_data) VALUES (%s, %s, %s, %s, %s, %s, %s)'
+                sql = 'INSERT INTO Users (first_name, last_name, email, phone_number, password, other_personal_data) VALUES (%s, %s, %s, %s, %s, %s)'
                 cursor.execute(sql, (
                     kwargs.get('first_name'),
                     kwargs.get('last_name'),
                     kwargs.get('email'),
                     kwargs.get('phone_number'),
                     kwargs.get('password'),
-                    kwargs.get('other_personal_data'),
-                    kwargs.get('other_doctor_data')
+                    kwargs.get('other_personal_data')
                 ))
                 connection.commit()
                 return True
@@ -628,6 +624,9 @@ def execute_sql_file(connection, sql_file):
 def main():
     connection = connect_to_database()
     execute_sql_file(connection, 'main_db.sql')
+    for role in ['doctor', 'patient', 'student']:
+        connection = connect_to_database()
+        create_new_role(connection, role)
      
 if __name__ == '__main__':
     main()
