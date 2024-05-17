@@ -6,7 +6,7 @@ import json
 
 app = Flask(__name__)
 # Настройка секретного ключа для подписи токенов
-app.config['JWT_SECRET_KEY'] = 'super-secret'  # Измените на свой секретный ключ
+app.config['JWT_SECRET_KEY'] = 'super-secret'
 app.config['JSON_AS_ASCII'] = False
 jwt = JWTManager(app)
 
