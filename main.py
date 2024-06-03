@@ -11,6 +11,7 @@ app.config['JSON_AS_ASCII'] = False
 jwt = JWTManager(app)
 
 # Получение токена
+# curl -d '{"login":"Alex@gmail.com", "password":"12345"}' -H "Content-Type: application/json" -X POST http://localhost:8080/login
 @app.route('/login', methods=['POST'])
 def login():
     try:
@@ -85,12 +86,13 @@ def send_img():
 
     # Загружаем изображение на сервер
     image_url = upload_image_to_bucket(image)
+    ai_response = upload_to_neural_network(image_url)
 
     # Сохраняем информацию об изображении в базу данных
     connection = connect_to_database()
     upload_image(connection, patient_id, image_url)
 
-    return jsonify({'image_url': image_url}), 200
+    return jsonify({'image_url': image_url, 'ai_response': ai_response}), 200
 
 # Получение изображений как для пациента так и врача
 @app.route('/imagebyid', methods=['GET', 'POST'])

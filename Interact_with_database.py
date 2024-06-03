@@ -1,4 +1,5 @@
 #!/usr/bin/env python3.12
+from decouple import config
 import hashlib
 import datetime
 import pymysql
@@ -16,6 +17,11 @@ import os
 # DB_PASSWORD = os.getenv('DB_PASSWORD')
 # DB_NAME = os.getenv('DB_NAME')
 
+DB_HOST = config('DB_HOST')
+DB_USER = config('DB_USER')
+DB_PASSWORD = config('DB_PASSWORD')
+DB_NAME = config('DB_NAME')
+
 # Подключение к базе данных
 def connect_to_database():
     try:
@@ -32,20 +38,20 @@ def connect_to_database():
 
 # Вспомогательные функции
 # Вставить принудительно в таблицу
-def insert_data(connection, variables, data, table_name):
-    try:
-        # Создание объекта курсора
-        with connection.cursor() as cursor:
-            # SQL запрос для вставки записи
+# def insert_data(connection, variables, data, table_name):
+#     try:
+#         # Создание объекта курсора
+#         with connection.cursor() as cursor:
+#             # SQL запрос для вставки записи
 
-            sql = f'INSERT INTO {table_name} ({', '.join(variables)}) VALUES ({', '.join(['%s' for _ in range(len(variables))])})'
-            # Выполнение SQL запроса с передачей данных
-            cursor.execute(sql, (data))
-        # Подтверждение изменений в базе данных
-        connection.commit()
-        print('Запись успешно добавлена в базу данных.')
-    except Exception as e:
-        print('Ошибка при добавлении записи в базу данных:', e)
+#             sql = f'INSERT INTO {table_name} ({', '.join(variables)}) VALUES ({', '.join(['%s' for _ in range(len(variables))])})'
+#             # Выполнение SQL запроса с передачей данных
+#             cursor.execute(sql, (data))
+#         # Подтверждение изменений в базе данных
+#         connection.commit()
+#         print('Запись успешно добавлена в базу данных.')
+#     except Exception as e:
+#         print('Ошибка при добавлении записи в базу данных:', e)
 # Достать всее из таблицы по имени
 def fetch_records(connection, table):
     try:
@@ -462,7 +468,7 @@ def delete_image(connection, image_id):
         connection.close()
 # Загрузка изображения в бакет
 def upload_image_to_bucket(image):
-    url = "https://alexsandr52-img-to-bucket-falsk-243c.twc1.net/upload"
+    url = 'https://alexsandr52-img-to-bucket-falsk-243c.twc1.net/upload'
     files = {'image': image}
 
     try:
@@ -472,8 +478,32 @@ def upload_image_to_bucket(image):
         else:
             return None
     except Exception as e:
-        print("Error uploading image:", e)
+        print('Error uploading image:', e)
         return None
+# Загрузка изображения в ai
+def download_image(image_url):
+    response = requests.get(image_url)
+    if response.status_code == 200:
+        return response.content
+    else:
+        raise Exception('Failed to download image')
+
+def upload_to_neural_network(image_url):
+    url = 'https://alexsandr52-yolov8-for-fracture-detection-1d6d.twc1.net/predict'
+    try:
+        # Скачиваем изображение
+        image_data = download_image(image_url)
+        
+        # Отправляем изображение на сервер
+        files = {'file': ('image.jpg', image_data, 'image/jpeg')}
+        response = requests.post(url, files=files)
+        
+        return response.json()
+    
+    except requests.exceptions.RequestException as e:
+        return {'error': str(e)}
+    except Exception as e:
+        return {'error': str(e)}
 
 # Для докторов
 # Функция для получения списка пациентов, которые привязаны к определенному доктору
