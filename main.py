@@ -10,6 +10,16 @@ app.config['JWT_SECRET_KEY'] = 'super-secret'
 app.config['JSON_AS_ASCII'] = False
 jwt = JWTManager(app)
 
+@app.route('/connection', methods=['POST'])
+def check_connection():
+    try: 
+        connection = connect_to_database()
+        print(connection)
+    except:
+        print('bad')
+    
+    return jsonify({'error': 'SWR'}), 501
+
 # Получение токена
 # curl -d '{"login":"Alex@gmail.com", "password":"12345"}' -H "Content-Type: application/json" -X POST http://localhost:8080/login
 @app.route('/login', methods=['POST'])
@@ -19,7 +29,6 @@ def login():
         password = request.json.get('password', None)
         
         connection = connect_to_database()
-        print(connection)
         user = authenticate_user(connection, login, password)
         
         if user['role_id'] == None: 
