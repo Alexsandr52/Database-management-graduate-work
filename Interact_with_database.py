@@ -17,10 +17,10 @@ import os
 # DB_PASSWORD = os.getenv('DB_PASSWORD')
 # DB_NAME = os.getenv('DB_NAME')
 
-DB_HOST = config('DB_HOST')
-DB_USER = config('DB_USER')
-DB_PASSWORD = config('DB_PASSWORD')
-DB_NAME = config('DB_NAME')
+# DB_HOST = config('DB_HOST')
+# DB_USER = config('DB_USER')
+# DB_PASSWORD = config('DB_PASSWORD')
+# DB_NAME = config('DB_NAME')
 
 # Подключение к базе данных
 def connect_to_database():
@@ -653,10 +653,10 @@ def execute_sql_file(connection, sql_file):
 # Пересоздать бд
 def main():
     connection = connect_to_database()
-    execute_sql_file(connection, 'main_db.sql')
-    for role in ['doctor', 'patient', 'student']:
-        connection = connect_to_database()
-        create_new_role(connection, role)
+    # execute_sql_file(connection, 'main_db.sql')
+    # for role in ['doctor', 'patient', 'student']:
+    #     connection = connect_to_database()
+    #     create_new_role(connection, role)
      
 if __name__ == '__main__':
     main()

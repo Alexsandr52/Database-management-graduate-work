@@ -6,3 +6,4 @@ requests
 flask_jwt_extended
 python-decouple
 python-dotenv
+cryptography
