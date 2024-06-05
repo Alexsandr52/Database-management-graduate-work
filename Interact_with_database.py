@@ -17,10 +17,10 @@ import os
 # DB_PASSWORD = os.getenv('DB_PASSWORD')
 # DB_NAME = os.getenv('DB_NAME')
 
-# DB_HOST = config('DB_HOST')
-# DB_USER = config('DB_USER')
-# DB_PASSWORD = config('DB_PASSWORD')
-# DB_NAME = config('DB_NAME')
+DB_HOST = config('DB_HOST')
+DB_USER = config('DB_USER')
+DB_PASSWORD = config('DB_PASSWORD')
+DB_NAME = config('DB_NAME')
 
 # Подключение к базе данных
 def connect_to_database():

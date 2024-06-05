@@ -10,7 +10,7 @@ app.config['JWT_SECRET_KEY'] = 'super-secret'
 app.config['JSON_AS_ASCII'] = False
 jwt = JWTManager(app)
 
-@app.route('/connection', methods=['POST'])
+@app.route('/connection', methods=['GET'])
 def check_connection():
     try: 
         connection = connect_to_database()
