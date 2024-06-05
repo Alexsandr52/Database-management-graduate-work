@@ -19,6 +19,7 @@ def login():
         password = request.json.get('password', None)
         
         connection = connect_to_database()
+        print(connection)
         user = authenticate_user(connection, login, password)
         
         if user['role_id'] == None: 

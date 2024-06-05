@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # URL для сервера Flask
-BASE_URL="http://localhost:8080"
+# BASE_URL="http://localhost:8080"
+BASE_URL="https://alexsandr52-database-management-graduate-work-4add.twc1.net"
 
 # Регистрация нового пользователя
 echo "Регистрация нового пользователя..."
