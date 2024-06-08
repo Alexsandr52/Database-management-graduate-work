@@ -79,7 +79,6 @@ def get_notifications():
 @jwt_required()
 def send_img():
     current_user = get_jwt_identity()
-    print(current_user)
     if current_user['role_id'] == 2:
         patient_id = current_user['id']
     elif current_user['role_id'] in [1, 3]:
@@ -101,6 +100,14 @@ def send_img():
     # Сохраняем информацию об изображении в базу данных
     connection = connect_to_database()
     upload_image(connection, patient_id, image_url)
+
+    connection = connect_to_database()
+    data = get_image_info_by_patient_id(connection, patient_id)
+    if type(data) != str:
+        img_id = data[-1]['id']
+
+        connection = connect_to_database()
+        save_analysis_results(connection, img_id, 'ai text', str(ai_response))
 
     return jsonify({'image_url': image_url, 'ai_response': ai_response}), 200
 

@@ -148,7 +148,7 @@ def get_all_users(connection):
 def get_notifications_by_user_id(connection, user_id):
     try:
         with connection.cursor() as cursor:
-            sql = 'SELECT * FROM NotificationInfo WHERE notification_id IN (SELECT notification_id FROM UserNotifications WHERE user_id = %s)'
+            sql = 'SELECT * FROM UserNotifications WHERE user_id = %s'
             cursor.execute(sql, (user_id,))
             notifications = cursor.fetchall()
             return notifications
@@ -413,8 +413,13 @@ def assign_patient_to_doctor(connection, doctor_id, patient_id):
 def get_image_info_by_patient_id(connection, patient_id):
     try:
         with connection.cursor() as cursor:
-            # Получаем все данные об изображениях для данного пациента
-            sql = 'SELECT * FROM Images WHERE patient_id = %s'
+            # Получаем данные об изображениях и их результаты анализа для данного пациента
+            sql = '''
+            SELECT i.id, i.upload_date, i.processing_status, i.image_data, a.result_data, a.boxes
+            FROM Images AS i
+            LEFT JOIN AnalysisResults AS a ON i.id = a.image_id
+            WHERE i.patient_id = %s
+            '''
             cursor.execute(sql, (patient_id,))
             images_info = cursor.fetchall()
             return images_info
@@ -429,7 +434,9 @@ def upload_image(connection, patient_id, image_data):
             sql = 'INSERT INTO Images (patient_id, image_data) VALUES (%s, %s)'
             cursor.execute(sql, (patient_id, image_data))
             connection.commit()
-            return 'Изображение успешно загружено'
+            return True
+    except:
+        return False
     finally:
         # Всегда закрываем соединение, чтобы избежать утечек
         connection.close()
@@ -541,7 +548,7 @@ def delete_relationship(connection, doctor_id, patient_id):
 
 # Работа с таблицей анализ
 # Функция для сохранения результатов анализа в базе данных
-def save_analysis_results(connection, image_id, analysis_results):
+def save_analysis_results(connection, image_id, result_data, boxes):
     try:
         with connection.cursor() as cursor:
             # Проверяем, существует ли изображение с таким ID
@@ -553,8 +560,8 @@ def save_analysis_results(connection, image_id, analysis_results):
                 return 'Изображение с указанным ID не найдено'
 
             # Сохраняем результаты анализа
-            sql_save_results = 'INSERT INTO AnalysisResults (image_id, results) VALUES (%s, %s)'
-            cursor.execute(sql_save_results, (image_id, analysis_results))
+            sql_save_results = 'INSERT INTO AnalysisResults (image_id, result_data, boxes) VALUES (%s, %s, %s)'
+            cursor.execute(sql_save_results, (image_id, result_data, boxes))
             connection.commit()
 
             return 'Результаты анализа успешно сохранены'
@@ -653,10 +660,10 @@ def execute_sql_file(connection, sql_file):
 # Пересоздать бд
 def main():
     connection = connect_to_database()
-    # execute_sql_file(connection, 'main_db.sql')
-    # for role in ['doctor', 'patient', 'student']:
-    #     connection = connect_to_database()
-    #     create_new_role(connection, role)
+    execute_sql_file(connection, 'main_db.sql')
+    for role in ['doctor', 'patient', 'student']:
+        connection = connect_to_database()
+        create_new_role(connection, role)
      
 if __name__ == '__main__':
     main()

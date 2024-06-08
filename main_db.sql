@@ -5,10 +5,10 @@ DROP TABLE IF EXISTS Users;
 CREATE TABLE Users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     first_name VARCHAR(255) NOT NULL,
-    last_name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
-    phone_number VARCHAR(10) UNIQUE,
     password VARCHAR(255) NOT NULL,
+    phone_number VARCHAR(10) UNIQUE,
+    last_name VARCHAR(255),
     other_personal_data TEXT
 );
 
@@ -46,37 +46,19 @@ CREATE TABLE AnalysisResults (
     id INT AUTO_INCREMENT PRIMARY KEY,
     image_id INT NOT NULL,
     result_data TEXT,
+    boxes TEXT, -- изменено с json на TEXT для хранения координат
     analysis_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (image_id) REFERENCES Images(id)
-);
-
--- Доктор и его пациент (решает вопрос возможности доступа нескольких докторов к одному изображению)
-DROP TABLE IF EXISTS DoctorPatient;
-CREATE TABLE DoctorPatient (
-    doctor_id INT NOT NULL,
-    patient_id INT NOT NULL,
-    PRIMARY KEY (doctor_id, patient_id),
-    FOREIGN KEY (doctor_id) REFERENCES Users(id),
-    FOREIGN KEY (patient_id) REFERENCES Users(id)
 );
 
 -- Уведомления для пользователей
 DROP TABLE IF EXISTS UserNotifications;
 CREATE TABLE UserNotifications (
-    notification_id INT AUTO_INCREMENT PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES Users(id)
-);
-
--- Текст уведомлений
-DROP TABLE IF EXISTS NotificationInfo;
-CREATE TABLE NotificationInfo (
-    notification_id INT NOT NULL,
     notification_text TEXT,
     notification_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (notification_id),
-    FOREIGN KEY (notification_id) REFERENCES UserNotifications(notification_id)
+    FOREIGN KEY (user_id) REFERENCES Users(id)
 );
-
 
 SET FOREIGN_KEY_CHECKS = 1;
