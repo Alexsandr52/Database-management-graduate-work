@@ -29,6 +29,15 @@ CREATE TABLE UserRoles (
     FOREIGN KEY (role_id) REFERENCES Roles(id)
 );
 
+DROP TABLE IF EXISTS DoctorPatient;
+CREATE TABLE DoctorPatient (
+    doctor_id INT NOT NULL,
+    patient_id INT NOT NULL,
+    PRIMARY KEY (doctor_id, patient_id),
+    FOREIGN KEY (doctor_id) REFERENCES Users(id),
+    FOREIGN KEY (patient_id) REFERENCES Users(id)
+);
+
 -- Медецинские изображения
 DROP TABLE IF EXISTS Images;
 CREATE TABLE Images (
@@ -36,7 +45,7 @@ CREATE TABLE Images (
     patient_id INT NOT NULL,
     image_data TEXT NOT NULL, -- Здесь предполагается хранение байтового представления
     upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    processing_status ENUM('in processing', 'processed', 'waiting') NOT NULL DEFAULT 'waiting',
+    processing_status ENUM('in processing', 'processed', 'waiting') NOT NULL DEFAULT 'processed',
     FOREIGN KEY (patient_id) REFERENCES Users(id)
 );
 
@@ -56,6 +65,7 @@ DROP TABLE IF EXISTS UserNotifications;
 CREATE TABLE UserNotifications (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
+    notification_title TEXT,
     notification_text TEXT,
     notification_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES Users(id)
