@@ -9,14 +9,6 @@ import string
 import random
 import os
 
-
-
-# Параметры подключения к базе данных
-# DB_HOST = os.getenv('DB_HOST')
-# DB_USER = os.getenv('DB_USER')
-# DB_PASSWORD = os.getenv('DB_PASSWORD')
-# DB_NAME = os.getenv('DB_NAME')
-
 DB_HOST = config('DB_HOST')
 DB_USER = config('DB_USER')
 DB_PASSWORD = config('DB_PASSWORD')
@@ -37,21 +29,6 @@ def connect_to_database():
     return None
 
 # Вспомогательные функции
-# Вставить принудительно в таблицу
-# def insert_data(connection, variables, data, table_name):
-#     try:
-#         # Создание объекта курсора
-#         with connection.cursor() as cursor:
-#             # SQL запрос для вставки записи
-
-#             sql = f'INSERT INTO {table_name} ({', '.join(variables)}) VALUES ({', '.join(['%s' for _ in range(len(variables))])})'
-#             # Выполнение SQL запроса с передачей данных
-#             cursor.execute(sql, (data))
-#         # Подтверждение изменений в базе данных
-#         connection.commit()
-#         print('Запись успешно добавлена в базу данных.')
-#     except Exception as e:
-#         print('Ошибка при добавлении записи в базу данных:', e)
 # Достать всее из таблицы по имени
 def fetch_records(connection, table):
     try:
