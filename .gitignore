@@ -1,5 +1,6 @@
 /venv
 /__pycache__
 /imgs
+/tests
 .env
 .DS_Store

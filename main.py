@@ -170,6 +170,24 @@ def patients_by_doctor():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# Получение информации о пациенте по ID
+@app.route('/patient_info', methods=['POST'])
+@jwt_required()
+def get_patient_info():
+    try:
+        current_user = get_jwt_identity()
+        if current_user['role_id'] not in [1, 3]:
+            return jsonify({'error': 'Unauthorized access'}), 403
+
+        patient_id = request.get_json().get('patient_id')
+        if not patient_id:
+            return jsonify({'error': 'patient_id is required'}), 400
+
+        connection = connect_to_database()
+        patient_info = get_patient_info_by_id(connection, patient_id)
+        return Response(response=json.dumps(patient_info, ensure_ascii=False), status=200, mimetype='application/json')
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8080)

@@ -490,6 +490,22 @@ def upload_to_neural_network(image_url):
         return {'error': str(e)}
 
 # Для докторов
+
+def get_patient_info_by_id(connection, patient_id):
+    try:
+        with connection.cursor() as cursor:
+            # SQL запрос для выборки информации о пациенте по ID
+            sql = 'SELECT * FROM Users WHERE id = %s'
+            cursor.execute(sql, (patient_id,))
+            result = cursor.fetchone()
+            if result:
+                return result
+            else:
+                return {'error': 'Patient not found'}
+    except Exception as e:
+        print('Ошибка при выполнении запроса к базе данных:', e)
+        return {'error': str(e)}
+
 # Функция для получения списка пациентов, которые привязаны к определенному доктору
 def get_patients_by_doctor_id(connection, doctor_id):
     try:
