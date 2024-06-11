@@ -185,7 +185,7 @@ def get_patient_info():
 
         connection = connect_to_database()
         patient_info = get_patient_info_by_id(connection, patient_id)
-        return Response(response=json.dumps(patient_info, ensure_ascii=False), status=200, mimetype='application/json')
+        return Response(response=json.dumps(patient_info, ensure_ascii=False).encode('utf8'), status=200, mimetype='application/json')
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
