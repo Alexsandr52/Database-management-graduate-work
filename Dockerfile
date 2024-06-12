@@ -1,4 +1,8 @@
-FROM python:3
+FROM python:3.12
+
+RUN apt-get update && apt-get install -y \
+    libgl1-mesa-glx \
+    libglib2.0-0
 
 WORKDIR /usr/src/app
 
@@ -10,3 +14,5 @@ COPY . .
 EXPOSE 8080
 
 CMD [ "python", "./main.py" ]
+
+
