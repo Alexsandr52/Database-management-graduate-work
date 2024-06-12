@@ -87,15 +87,20 @@ def send_img():
             return jsonify({'error': 'Patient ID is required for doctors'}), 400
     else:
         return jsonify({'error': 'Permission denied'}), 403
-
-    # Получаем данные изображения из запроса
+    patient_id = 1
     if 'image' not in request.files:
         return jsonify({'error': 'No image provided'}), 400
     image = request.files['image']
 
     # Загружаем изображение на сервер
-    image_url = upload_image_to_bucket(image)
-    ai_response = upload_to_neural_network(image_url)
+    image.seek(0)
+    ai_response = upload_to_neural_network(image)
+    
+    boxes = ai_response.get('boxes', [])        
+    image.seek(0)
+    image_with_boxes = draw_boxes(image, boxes)
+
+    image_url = upload_image_to_bucket(image_with_boxes)
 
     # Сохраняем информацию об изображении в базу данных
     connection = connect_to_database()
@@ -189,5 +194,17 @@ def get_patient_info():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# Получение новостей
+@app.route('/news', methods=['get'])
+def get_news():
+    try:
+        connection = connect_to_database()
+        res = get_all_news(connection)
+        for news in res: news['news_time'] = str(news['news_time'])
+        return Response(response=json.dumps(res, ensure_ascii=False).encode('utf8'), status=200)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# get_all_news
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8080)

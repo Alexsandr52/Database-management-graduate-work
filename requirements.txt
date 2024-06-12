@@ -7,3 +7,7 @@ flask_jwt_extended
 python-decouple
 python-dotenv
 cryptography
+opencv-python
+bytesbufio
+pillow
+numpy

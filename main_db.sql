@@ -71,4 +71,13 @@ CREATE TABLE UserNotifications (
     FOREIGN KEY (user_id) REFERENCES Users(id)
 );
 
+DROP TABLE IF EXISTS News;
+CREATE TABLE News (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(100),
+    news_text TEXT,
+    news_img TEXT,
+    news_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 SET FOREIGN_KEY_CHECKS = 1;

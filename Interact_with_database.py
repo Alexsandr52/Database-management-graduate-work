@@ -7,6 +7,10 @@ import requests
 import secrets
 import string
 import random
+import cv2
+from io import BytesIO
+from PIL import Image
+import numpy as np
 import os
 
 DB_HOST = config('DB_HOST')
@@ -472,15 +476,16 @@ def download_image(image_url):
     else:
         raise Exception('Failed to download image')
 
-def upload_to_neural_network(image_url):
+def upload_to_neural_network(image):
     url = 'https://alexsandr52-yolov8-for-fracture-detection-1d6d.twc1.net/predict'
+
     try:
-        # Скачиваем изображение
-        image_data = download_image(image_url)
-        
         # Отправляем изображение на сервер
-        files = {'file': ('image.jpg', image_data, 'image/jpeg')}
+        files = {'file': ('image.jpg', image, 'image/jpeg')}
         response = requests.post(url, files=files)
+        
+        # Проверяем статус ответа
+        response.raise_for_status()
         
         return response.json()
     
@@ -489,8 +494,21 @@ def upload_to_neural_network(image_url):
     except Exception as e:
         return {'error': str(e)}
 
-# Для докторов
+# Рисует квадраты на изображении на основе предоставленных координат.
+def draw_boxes(image, boxes):
+    np_image = np.frombuffer(image.read(), np.uint8)
+    image = cv2.imdecode(np_image, cv2.IMREAD_COLOR)
+    
+    for box in boxes:
+        x, y, w, h = box
+        top_left = (int(x)-6, int(y)-6)
+        bottom_right = (int(x + w)+5, int(y + h)+5)
+        cv2.rectangle(image, top_left, bottom_right, (0, 255, 0), 2)
 
+    is_success, buffer = cv2.imencode(".jpg", image)
+    return BytesIO(buffer)
+
+# Для докторов
 def get_patient_info_by_id(connection, patient_id):
     try:
         with connection.cursor() as cursor:
@@ -631,6 +649,22 @@ def search_images(connection, criteria):
     finally:
         # Всегда закрываем соединение, чтобы избежать утечек
         connection.close()         
+
+def get_all_news(connection):
+    try:
+        with connection.cursor() as cursor:
+            # SQL запрос для выборки всех новостей
+            sql = 'SELECT * FROM News ORDER BY news_time DESC'
+            cursor.execute(sql)
+            result = cursor.fetchall()
+            if result:
+                return result
+            else:
+                raise {'error': 'No news found'}
+    except Exception as e:
+        print('Ошибка при выполнении запроса к базе данных:', e)
+        raise {'error': str(e)}
+
 
 # Сброс бд
 # Создать таблицы 
