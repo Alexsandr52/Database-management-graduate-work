@@ -222,7 +222,7 @@ def change_user():
             new_phone_number=data.get('new_phone_number'),
             new_personal_data=data.get('new_personal_data')
         )
-        Response(response=json.dumps({'response': response}, ensure_ascii=False).encode('utf8'), status=200)
+         return Response(response=json.dumps({'response': response}, ensure_ascii=False).encode('utf8'), status=200)
     except Exception as e:
         return jsonify({'error': f'Произошла ошибка: {str(e)}'})
 
