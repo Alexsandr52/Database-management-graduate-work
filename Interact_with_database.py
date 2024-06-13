@@ -77,10 +77,7 @@ def send_temp_password_via_email(email, temp_password):
 def update_user_info(connection, user_id, new_first_name=None, new_last_name=None, new_email=None, new_phone_number=None, new_personal_data=None):
     try:
         with connection.cursor() as cursor:
-            # Создаем словарь для хранения параметров обновления
             update_values = {}
-
-            # Проверяем переданные параметры и добавляем их в словарь
             if new_first_name is not None:
                 update_values['first_name'] = new_first_name
             if new_last_name is not None:
@@ -92,30 +89,15 @@ def update_user_info(connection, user_id, new_first_name=None, new_last_name=Non
             if new_personal_data is not None:
                 update_values['other_personal_data'] = new_personal_data
 
-            # Если нет параметров для обновления, возвращаем сообщение
-            if not update_values:
-                return 'Нет данных для обновления'
-
-            # Формируем SQL-запрос и его значения
-            sql_update_info = 'UPDATE Users SET '
-            sql_values = []
-            for key, value in update_values.items():
-                sql_values.append(f'{key} = %s')
-            sql_update_info += ', '.join(sql_values)
-            sql_update_info += ' WHERE id = %s'
-
-            # Формируем кортеж значений для запроса
-            query_values = list(update_values.values())
-            query_values.append(user_id)
-
-            # Выполняем обновление информации
-            cursor.execute(sql_update_info, tuple(query_values))
-            connection.commit()
+            if update_values:
+                sql_update_info = 'UPDATE Users SET ' + ', '.join(f"{key} = %s" for key in update_values.keys()) + ' WHERE id = %s'
+                query_values = list(update_values.values()) + [user_id]
+                cursor.execute(sql_update_info, tuple(query_values))
+                connection.commit()
 
             return 'Информация о пользователе успешно обновлена'
-    except Exception as e:
-        # Логируем ошибку или возвращаем сообщение об ошибке
-        return f'Произошла ошибка: {e}'
+    finally:
+        connection.close()
 
 # Функция для получения списка всех пользователей
 def get_all_users(connection): 

@@ -210,13 +210,10 @@ def get_news():
 @jwt_required()
 def change_user():
     try:
+        user_id = get_jwt_identity()['id']
+        data = request.get_json()
         connection = connect_to_database()
-        
-        user_id = get_jwt_identity()  # Получаем идентификатор пользователя из JWT
-        data = request.json  # Получаем данные из тела запроса
-
-        # Вызываем функцию обновления информации о пользователе
-        result = update_user_info(
+        response = update_user_info(
             connection,
             user_id,
             new_first_name=data.get('new_first_name'),
@@ -225,13 +222,9 @@ def change_user():
             new_phone_number=data.get('new_phone_number'),
             new_personal_data=data.get('new_personal_data')
         )
-
-        if 'ошибка' in result.lower():
-            return jsonify({'error': result}), 400
-
-        return jsonify({'response': result})
+        Response(response=json.dumps({'response': response}, ensure_ascii=False).encode('utf8'), status=200)
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': f'Произошла ошибка: {str(e)}'})
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8080)
