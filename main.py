@@ -15,8 +15,9 @@ def check_connection():
     try: 
         connection = connect_to_database()
         print(connection)
-    except:
-        print('bad')
+        connection.close()
+    except Exception as e:
+        print(f'bad {e}')
     
     return jsonify({'error': 'SWR'}), 501
 
@@ -195,7 +196,7 @@ def get_patient_info():
         return jsonify({'error': str(e)}), 500
 
 # Получение новостей
-@app.route('/news', methods=['get'])
+@app.route('/news', methods=['GET'])
 def get_news():
     try:
         connection = connect_to_database()
@@ -205,6 +206,32 @@ def get_news():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# get_all_news
+@app.route('/user_settings', methods=['POST'])
+@jwt_required()
+def change_user():
+    try:
+        connection = connect_to_database()
+        
+        user_id = get_jwt_identity()  # Получаем идентификатор пользователя из JWT
+        data = request.json  # Получаем данные из тела запроса
+
+        # Вызываем функцию обновления информации о пользователе
+        result = update_user_info(
+            connection,
+            user_id,
+            new_first_name=data.get('new_first_name'),
+            new_last_name=data.get('new_last_name'),
+            new_email=data.get('new_email'),
+            new_phone_number=data.get('new_phone_number'),
+            new_personal_data=data.get('new_personal_data')
+        )
+
+        if 'ошибка' in result.lower():
+            return jsonify({'error': result}), 400
+
+        return jsonify({'response': result})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8080)

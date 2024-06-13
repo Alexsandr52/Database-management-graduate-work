@@ -92,6 +92,10 @@ def update_user_info(connection, user_id, new_first_name=None, new_last_name=Non
             if new_personal_data is not None:
                 update_values['other_personal_data'] = new_personal_data
 
+            # Если нет параметров для обновления, возвращаем сообщение
+            if not update_values:
+                return 'Нет данных для обновления'
+
             # Формируем SQL-запрос и его значения
             sql_update_info = 'UPDATE Users SET '
             sql_values = []
@@ -109,9 +113,10 @@ def update_user_info(connection, user_id, new_first_name=None, new_last_name=Non
             connection.commit()
 
             return 'Информация о пользователе успешно обновлена'
-    finally:
-        # Всегда закрываем соединение, чтобы избежать утечек
-        connection.close()
+    except Exception as e:
+        # Логируем ошибку или возвращаем сообщение об ошибке
+        return f'Произошла ошибка: {e}'
+
 # Функция для получения списка всех пользователей
 def get_all_users(connection): 
     try:
@@ -502,7 +507,7 @@ def draw_boxes(image, boxes):
     for box in boxes:
         x, y, w, h = box
         top_left = (int(x)-6, int(y)-6)
-        bottom_right = (int(x + w)+5, int(y + h)+5)
+        bottom_right = (int(x + h)+10, int(y + w)+10)
         cv2.rectangle(image, top_left, bottom_right, (0, 255, 0), 2)
 
     is_success, buffer = cv2.imencode(".jpg", image)
