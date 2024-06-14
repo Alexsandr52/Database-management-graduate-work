@@ -17,6 +17,8 @@ DB_HOST = config('DB_HOST')
 DB_USER = config('DB_USER')
 DB_PASSWORD = config('DB_PASSWORD')
 DB_NAME = config('DB_NAME')
+base_id = config('BASE_ID')
+api_key = config('API_KEY')
 
 # Подключение к базе данных
 def connect_to_database():
@@ -123,7 +125,42 @@ def get_notifications_by_user_id(connection, user_id):
     finally:
         # Всегда закрываем соединение, чтобы избежать утечек
         connection.close()
-# Создавать уведы буду в другом месте
+# Создавать уведы
+def create_new_notification(connection, user_id, notification_title=None, notification_text=None):
+    if notification_title == None: notification_title = 'Ваши медицинские анализы готовы!'
+    if notification_text == None: notification_text = '''Хорошие новости! Ваши медицинские анализы уже
+                                                        доступны. Мы завершили обработку результатов и
+                                                        теперь вы можете получить информацию о вашем
+
+                                                        состоянии здоровья.
+
+                                                        Забота о вашем здоровье — наш главный
+                                                        приоритет.
+
+                                                        С уважением,
+                                                        [СЕК_НЕАЕТН]'''
+    try:
+        with connection.cursor() as cursor:
+            # Проверяем, существует ли пользователь с данным ID
+            sql_check_user = 'SELECT * FROM Users WHERE id = %s'
+            cursor.execute(sql_check_user, (user_id,))
+            existing_user = cursor.fetchone()
+
+            if not existing_user:
+                return 'Пользователь с таким ID не существует'
+
+            # Создаем новое уведомление
+            sql_create_notification = '''
+                INSERT INTO UserNotifications (user_id, notification_title, notification_text)
+                VALUES (%s, %s, %s)
+            '''
+            cursor.execute(sql_create_notification, (user_id, notification_title, notification_text))
+            connection.commit()
+
+            return 'Новое уведомление успешно создано'
+    finally:
+        # Всегда закрываем соединение, чтобы избежать утечек
+        connection.close()
 
 #Взаимодействие с ролями 
 # Функция для получения списка всех ролей
@@ -488,8 +525,8 @@ def draw_boxes(image, boxes):
     
     for box in boxes:
         x, y, w, h = box
-        top_left = (int(x)-6, int(y)-6)
-        bottom_right = (int(x + h)+10, int(y + w)+10)
+        top_left = (int(x), int(y))
+        bottom_right = (int(x + w)+7, int(y + h)+7)
         cv2.rectangle(image, top_left, bottom_right, (0, 255, 0), 2)
 
     is_success, buffer = cv2.imencode(".jpg", image)
@@ -652,6 +689,44 @@ def get_all_news(connection):
         print('Ошибка при выполнении запроса к базе данных:', e)
         raise {'error': str(e)}
 
+def make_comment(part=None, is_fructed=False):
+    try:
+        part = f"часть тела на снимке - {['рука', 'нога', 'таз', 'плечо'][part]},"
+    except:
+        part = 'на котором мы не смогли определить часть тела'
+
+    fruc_status = 'перелом' if is_fructed else 'перелом отсутствует'
+
+    prompt = {
+        "modelUri": f"gpt://{base_id}/yandexgpt-lite",
+        "completionOptions": {
+            "stream": False,
+            "temperature": 0.6,
+            "maxTokens": "600"
+        },
+        "messages": [
+            {
+                "role": "system",
+                "text": """Ты система, которая пишет комментарии к результатам рентгена, внутри больницы. 
+                           Придумай краткий и информативный комментарий к данным, полученным после рентгеновского анализа. 
+                           Комментарий должен быть полезен пациенту, но может быть полезен и сотруднику больницы. 
+                           Он должен быть кратким и включать наблюдение за наличием или отсутствием перелома, и рекомендуемыми действиями."""
+            },
+            {
+                "role": "user",
+                "text": f"Комментарий к результату рентгеновского анализа, {part} {fruc_status}."
+            }
+        ]
+    }
+
+    url = "https://llm.api.cloud.yandex.net/foundationModels/v1/completion"
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": "Api-Key " + api_key
+    }
+
+    response = requests.post(url, headers=headers, json=prompt)
+    return response.json()  # Return JSON response
 
 # Сброс бд
 # Создать таблицы 

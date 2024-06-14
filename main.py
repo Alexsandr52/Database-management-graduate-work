@@ -3,6 +3,7 @@ from flask import Flask, Response, request, jsonify
 from Interact_with_database import *
 from datetime import timedelta
 import json
+import re
 
 app = Flask(__name__)
 # Настройка секретного ключа для подписи токенов
@@ -77,7 +78,7 @@ def get_notifications():
 
 # Отправить изображение как врач или пользователь
 @app.route('/sendimagebyid', methods=['POST'])
-@jwt_required()
+# @jwt_required()
 def send_img():
     current_user = get_jwt_identity()
     if current_user['role_id'] == 2:
@@ -88,10 +89,11 @@ def send_img():
             return jsonify({'error': 'Patient ID is required for doctors'}), 400
     else:
         return jsonify({'error': 'Permission denied'}), 403
-    patient_id = 1
+    # patient_id = 1
     if 'image' not in request.files:
         return jsonify({'error': 'No image provided'}), 400
     image = request.files['image']
+
 
     # Загружаем изображение на сервер
     image.seek(0)
@@ -109,12 +111,26 @@ def send_img():
 
     connection = connect_to_database()
     data = get_image_info_by_patient_id(connection, patient_id)
+    
+    gpt_comment = ''
+
+    if ai_response['boxes'] != []:
+        try: part = ai_response['results']    
+        except: part = None
+
+        gpt_comment = make_comment(is_fructed=True, part=part)["result"]["alternatives"][0]["message"]["text"]
+        text_without_brackets = re.sub(r'\[.*?\]', '', gpt_comment)
+        gpt_comment = text_without_brackets.replace('**', '')
+        gpt_comment = gpt_comment.replace('*', '')
+
     if type(data) != str:
         img_id = data[-1]['id']
 
         connection = connect_to_database()
-        save_analysis_results(connection, img_id, 'ai text', str(ai_response))
+        save_analysis_results(connection, img_id, gpt_comment, str(ai_response))
 
+    connection = connect_to_database()
+    create_new_notification(connection, user_id=patient_id)
     return jsonify({'image_url': image_url, 'ai_response': ai_response}), 200
 
 # Получение изображений как для пациента так и врача
@@ -222,7 +238,7 @@ def change_user():
             new_phone_number=data.get('new_phone_number'),
             new_personal_data=data.get('new_personal_data')
         )
-         return Response(response=json.dumps({'response': response}, ensure_ascii=False).encode('utf8'), status=200)
+        return Response(response=json.dumps({'response': response}, ensure_ascii=False).encode('utf8'), status=200)
     except Exception as e:
         return jsonify({'error': f'Произошла ошибка: {str(e)}'})
 
