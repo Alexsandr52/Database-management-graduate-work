@@ -78,7 +78,7 @@ def get_notifications():
 
 # Отправить изображение как врач или пользователь
 @app.route('/sendimagebyid', methods=['POST'])
-# @jwt_required()
+@jwt_required()
 def send_img():
     current_user = get_jwt_identity()
     if current_user['role_id'] == 2:

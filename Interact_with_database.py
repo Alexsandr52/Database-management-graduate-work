@@ -520,16 +520,26 @@ def upload_to_neural_network(image):
 
 # Рисует квадраты на изображении на основе предоставленных координат.
 def draw_boxes(image, boxes):
+    # Преобразуем входное изображение из буфера в формат numpy массива
     np_image = np.frombuffer(image.read(), np.uint8)
     image = cv2.imdecode(np_image, cv2.IMREAD_COLOR)
     
+    # Создаем копию изображения для рисования пятен
+    overlay = image.copy()
+    
     for box in boxes:
         x, y, w, h = box
-        top_left = (int(x), int(y))
-        bottom_right = (int(x + w)+7, int(y + h)+7)
-        cv2.rectangle(image, top_left, bottom_right, (0, 255, 0), 2)
-
-    is_success, buffer = cv2.imencode(".jpg", image)
+        center = (int(x-6 + w / 2), int(y-6 + h / 2))
+        radius = int(max(w+4, h+4) / 2)  # Радиус круга равен половине большей стороны прямоугольника
+        
+        # Создаем временное изображение для рисования круга
+        temp_image = overlay.copy()
+        cv2.circle(temp_image, center, radius, (0, 255, 0), -1)  # -1 заполняет круг
+        alpha=0.26
+        # Смешиваем временное изображение с исходным
+        cv2.addWeighted(temp_image, alpha, overlay, 1 - alpha, 0, overlay)
+    
+    is_success, buffer = cv2.imencode(".jpg", overlay)
     return BytesIO(buffer)
 
 # Для докторов
