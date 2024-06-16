@@ -128,17 +128,8 @@ def get_notifications_by_user_id(connection, user_id):
 # Создавать уведы
 def create_new_notification(connection, user_id, notification_title=None, notification_text=None):
     if notification_title == None: notification_title = 'Ваши медицинские анализы готовы!'
-    if notification_text == None: notification_text = '''Хорошие новости! Ваши медицинские анализы уже
-                                                        доступны. Мы завершили обработку результатов и
-                                                        теперь вы можете получить информацию о вашем
-
-                                                        состоянии здоровья.
-
-                                                        Забота о вашем здоровье — наш главный
-                                                        приоритет.
-
-                                                        С уважением,
-                                                        [СЕК_НЕАЕТН]'''
+    if notification_text == None: notification_text = '''Хорошие новости! Ваши медицинские анализы уже доступны. Мы завершили обработку результатов и теперь вы можете получить информацию о вашем состоянии здоровья.\nЗабота о вашем здоровье — наш главный
+                                                        приоритет.'''
     try:
         with connection.cursor() as cursor:
             # Проверяем, существует ли пользователь с данным ID
