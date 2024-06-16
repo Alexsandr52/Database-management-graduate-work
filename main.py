@@ -151,7 +151,7 @@ def get_image_info_by_id():
     if type(data) != str:
         for img in data: img['upload_date'] = str(img['upload_date'])
 
-    data = json.dumps(data, ensure_ascii=False).encode('utf8')
+    data = json.dumps(data[::-1], ensure_ascii=False).encode('utf8')
     return Response(data, status=200)
 
 # Обновление статуса
